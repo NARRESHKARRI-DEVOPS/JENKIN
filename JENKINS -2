@@ -1,0 +1,550 @@
+SonarQube installation
+======================
+
+step 1: launch t2.medium machine [4GB]
+
+step 2: connect to that server
+
+step 3: switch to root user [ sudo su - ]
+
+step 4: install java
+
+   sudo yum install java-11-openjdk-devel -y
+  
+   javac --version
+
+step 5: go to /opt dir
+
+  cd /opt
+
+step 6: yum install wget unzip -y
+
+step 7: wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-9.6.1.59531.zip
+
+step 7.1 : unzip sonarqube-9.6.1.59531
+
+step 8: mv sonarqube-9.6.1.59531 sonarqube
+
+step 9: 
+ As a good security practice, SonarQuber Server is not advised to run sonar service as a root user, so create a new user called sonar user  and grant sudo access to manage nexus services as follows.
+
+
+useradd sonar
+
+step 10: 
+
+Give the sudo access to sonar user
+
+visudo
+
+sonar   ALL=(ALL)       NOPASSWD: ALL
+
+step 11:
+
+Change the owner and group permissions to /opt/sonarqube/ directory.
+
+
+chown -R sonar:sonar /opt/sonarqube/
+chmod -R 775 /opt/sonarqube/
+su - sonar
+cd /opt/sonarqube/bin/linux-x86-64/
+
+sh sonar.sh start
+sh sonar.sh status
+
+in real time same permission are given to the file ?
+
+
+
+step 12: Now you can try to access the SonarQube Server.
+
+NOTE: default port number for Sonarqube server: 9000
+
+http://15.207.110.48:9000
+
+NOTE: pls make sure to allow traffic for 9000 port.
+
+step 13: refresh the page
+
+  default credentials:  uname: admin   pwd: kkfunda
+
+step 14: It will ask to change the password
+
+
+
+========================================================================================
+
+Nexus Installation starts
+========================
+
+
+
+step 1: Launch an EC2 instance [t2.medium]
+
+step 2: connect to that server.
+
+step 3: Before installation check the RAM once: " free -h "
+
+step 4: sudo su -
+
+step 5: check whether java is installed or not.
+
+     javac -version
+
+step 6: Install java
+ 
+#Install JDK 1.8 
+sudo yum install java-1.8.0-openjdk-devel -y
+
+javac -version
+
+step 7: 
+
+cd /opt	
+
+yum install tar wget -y
+
+step 8: 
+
+
+
+https://download.sonatype.com/nexus/3/nexus-3.70.1-02-java8-unix.tar.gz
+
+wget https://download.sonatype.com/nexus/3/nexus-3.70.1-02-java8-unix.tar.gz
+
+
+step 9: 
+
+tar -zxvf nexus-3.70.1-02-java8-unix.tar.gz
+
+
+step 10:
+
+mv /opt/nexus-3.70.1-02 /opt/nexus
+
+
+
+NOTE: As a good security practice, Nexus is not advised to run nexus service as a root user, so create a new user called nexus and grant sudo access to manage nexus services as follows.
+
+
+step 11: 
+
+useradd nexus
+
+step 12: Give the sudo access to nexus user
+
+visudo
+nexus ALL=(ALL) NOPASSWD: ALL
+
+step 13: Change the owner and group permissions to /opt/nexus and /opt/sonatype-work directories.
+
+chown -R nexus:nexus /opt/nexus
+chown -R nexus:nexus /opt/sonatype-work
+chmod -R 775 /opt/nexus
+chmod -R 775 /opt/sonatype-work
+
+
+step 14: Open /opt/nexus/bin/nexus.rc file and  uncomment run_as_user parameter and set as nexus user.
+
+vi /opt/nexus/bin/nexus.rc
+run_as_user="nexus"
+
+step 15: Create nexus as a service
+
+ln -s /opt/nexus/bin/nexus /etc/init.d/nexus
+
+
+step 16: Switch as a nexus user and start the nexus service as follows.
+
+sudo su - nexus
+
+step 17: Enable the nexus services
+
+sudo systemctl enable nexus
+
+step 18: Start the nexus service
+
+sudo systemctl start nexus
+
+step 19:  Access the Nexus server from Laptop/Desktop browser.
+
+http://65.1.95.162:8081/
+
+step 20: click on login
+
+NOTE: Before 3.15 version uname and password is admin and admin123 , But now process changed.
+
+cat /opt/sonatype-work/nexus3/admin.password
+
+Uname: admin   pwd: kkfunda
+
+===============================================================================================
+
+
+Installation of tomcat
+======================
+
+prerequisites 
+-------------
+java 1.8 min required for tomcat 9.x version.
+
+1 GB RAM is enough, because  we are running small web application.
+
+step 1: launch one ec2 m/c for tomcat 
+
+step 2: connect to that server
+
+step 3: sudo su -
+
+step 4: install java
+   sudo yum install java-11-openjdk-devel -y
+   javac --version
+
+step 5: yum install wget unzip -y
+
+step 6: cd /opt/
+   
+      wget https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.91/bin/apache-tomcat-9.0.91.zip
+     
+step 7: unzip apache-tomcat-9.0.91.zip
+
+ 
+
+
+
+step 8: goto the bin directory.
+     
+       cd /opt/apache-tomcat-9.0.91/bin
+
+step 9: chmod u+x *.sh
+
+
+IQ] How to start/stop the tomcat server?
+
+    step 1: go to bin directory 
+
+    step 2: sh startup.sh    ----> to start
+                or
+            sh catalina.sh start ---> to start
+
+          sh shutdown.sh  ----> to stop 
+               or
+          sh catalina.sh stop ----> to stop
+
+
+NOTE: By default port number of tomcat : 8080
+
+
+
+
+IQ] How to check tomcat is running or not?
+
+    sudo yum install lsof
+    lsof -i :8080
+
+
+   ps -ef|grep -i "tomcat"
+
+
+
+
+
+
+
+IQ] I want to start/stop tomcat server from anywhere instead of bin dir?
+
+
+ln -s /opt/apache-tomcat-9.0.91/bin/startup.sh /usr/bin/startTomcat
+ln -s /opt/apache-tomcat-9.0.91/bin/shutdown.sh /usr/bin/stopTomcat
+
+Now you can go and run in any directory.
+
+
+http://13.201.60.70:8080/
+
+
+
+
+
+
+
+
+
+
+
+
+IQ] How to access tomcat server from PC?
+
+NOTE: default port number for tomcat server is 8080.
+
+ http://65.2.129.199:8080  ---> directly you cant access without enable that port number     				in security group.
+
+  select the server --> go to security --> scroll down --> click on security group ---->
+  click on edit in-bound rules ---> click on add rule ---> select custom tcp ---> give port 8080 ----> select anywhere ipv4 ---> save the rules.
+
+Then reload this url http://13.233.32.177:8080
+
+click on server Status, Manager App, Host Manager ----> not able to access.
+
+
+====================================================================
+
+
+--> we can place our application into "Manager App"
+                                       ===========
+
+step 1: cd /opt/apache-tomcat-9.0.91/webapps
+
+step 2: cd manager 
+
+step 3: cd META-INF
+
+step 4: ls ----> context.xml
+
+step 5: vi context.xml
+    
+      :se nu
+      comment 21st and 22nd lines.
+     <!--
+     -->
+step 6: refresh the main page ----> It will ask the credentials.
+
+step 7: cd /opt/apache-tomcat-9.0.91/conf/ 
+
+step 8: vi tomcat-users.xml ---> goto end of the file and add users.
+
+  <user username="kk" password="kkfunda123" roles="manager-gui,admin-gui"/>
+
+  <user username="mahesh" password="mahesh" roles="manager-gui,admin-gui"/>
+
+
+
+if you want to login Host-manager do the same process?
+                     ============
+step 1: cd /opt/apache-tomcat-9.0.91/webapps
+
+step 2: cd host-manager 
+
+step 3: cd META-INF
+
+step 4: ls ----> context.xml
+
+step 6: vi context.xml
+
+step 7: vi context.xml
+
+      comment 21st and 22nd lines.
+     <!--
+     -->
+step 8: refresh the main page ----> It will ask the credentials, give the credentials.
+
+step 9: go and check the logs directory logs are created or not
+
+       cd /opt/apache-tomcat-9.0.91/logs
+
+  uname: admin	pwd: kkfunda
+
+
+=================================================================================================
+
+Automate all the tasks using jenkins
+=====================================
+
+How to create a job
+===================
+
+Jenkins DashBoard --> New item --> enter an item name(jio-dev) --> freestyle project --> ok --> general --> description --> scroll down --> source code management -->  select git(GitHub,bitbucket,gitlab) --> repository url --> After that we will get an error --> pls install git in jenkins server --> yum install git -y --> save --> click on configure for any updates --> 
+
+
+How to add git credentials
+--------------------------
+
+click on add --> uname: kkeducation12345 pwd: ghp_C9W7WSKt9dryxCkzU7mqQc1X6lUJOX47cPL7  --> Description --> github credentials --> Add 
+
+--> branches to build --> */development --> scroll down --> build -->add build --> Invoke maven toplevel targets ---> goals --> save 
+
+
+--> for run the job click on job --> In left side click on buid now --> failed --> click on job --> console output --> Due maven not instaled uild is failing 
+
+--> check maven is installed or not in jenkins server 
+
+  mvn -version
+
+
+IQ] Where we need to install maven in linux server or in the jenkins server itself ?
+
+ANS: If you go for linux server only one maven install is possible but in jenkins many versions possible so we are going to install in the jenkins server.
+
+
+
+How to download maven in jenkins ?
+==================================
+
+go to jenkins dashboard --> manage jenkins --> tools -->scroll down --> add maven -->  maven 3.9.8 --> select version 3.9.8 --> add many versions --> save 
+
+click on job --> configure --> scroll down --> build steps -->  select maven version --> save 
+
+--> again run the job --> It will success 
+
+
+/var/lib/jenkins/workspace/jio-dev/target/ --> warfile location
+
+
+
+
+SonarQube server integration
+============================
+
+take ip address of SonarQube server [http://15.207.110.48:9000/] --> go to GitHub repository --> select the correct branch [development] --> pom.xml --> edit the file --> in <properties> tag keep sonarqube server details 
+
+
+--> go to job --> configure --> scroll down --> build [ clean package sonar:sonar ] --> save
+
+--> go and see the sonarqube server --> check the projects --> now build the job --> success.
+
+
+
+
+
+Nexus integration with jenkins
+===============================
+
+step 1: connect to maven server, Where java projects are available
+
+step 2: where to keep our repository details?
+
+update the details in pom.xml
+
+          <distributionManagement>
+
+            <repository>
+              <id>nexus</id>
+              <name>KK FUNDA Releases Nexus Repository</name>
+              <url>http://65.1.95.162:8081/repository/jio-release/</url>
+            </repository>
+
+            <snapshotRepository>
+              <id>nexus</id>
+              <name>KK FUNDA Snapshot Nexus Repository </name>
+              <url>http://65.1.95.162:8081/repository/jio-snapshot/</url>
+            </snapshotRepository>
+
+        </distributionManagement>
+
+step 3: Where we need to keep nexus credentials?
+
+--> In SonarQube we updated credentials in pom.xml
+
+
+NOTE: maven is installed in jenkins pls check correct path of settings.xml
+
+
+find / -name settings.xml
+
+--> In nexus, repo details in pom.xml and credentials in 
+ cd /var/lib/jenkins/tools/hudson.tasks.Maven_MavenInstallation/maven_3.9.8/conf/
+
+
+   <server>
+      <id>nexus</id>
+      <username>admin</username>
+      <password>kkfunda</password>
+    </server>
+
+
+--> click on job --> configure --> build --> clean deploy sonar:sonar --> save build now 
+
+
+tomcat integration
+==================
+
+1) install the plugin in deployt to container
+
+2) confign in tomcat cat  credientals  nd select container version
+
+3) paste the tomcat url 
+
+
+
+
+==============================================================================================
+
+
+SCM Polling
+============
+
+1)Jenkins polls SCM based on a defined schedule
+
+2)If new commits are found, the build is triggered.
+
+Pros: Always builds the latest code changes
+Cons: Frequent polling can use a lot of server resources.
+
+
+Periodic Builds
+===============
+
+1)Jenkins builds at specified intervals, regardless of code changes,
+ 
+2)You set a cron-like schedule for builds,Builds occur based on this schedule
+
+Pros: Regular builds, independent of code changes.
+Cons: May build the same code if no new commits exist
+
+
+
+GitHub Webhook
+==============
+
+GitHub notifies Jenkins of code changes immediately.
+
+Pros: Immediate build triggering, reducing lag.
+
+Cons: Requires proper webhook configuration.
+
+webhook congiguration
+====================== 
+ setup build config -> click -GitHub Webhook
+Go to ->github ->select your repository  nd branch -> on right side click on settings->select webhooks -> payload block  fill the jenkins <url>http://65.1.95.162:8080/github-webhook/
+
+nd select contextpath : json --> click addit
+
+
+Code Coverage
+=============
+Tool: JaCoCo
+
+Goal: Ensure code coverage is at least 80%.
+
+
+1)Identify untested code using JaCoCo reports.
+
+2)Write more tests for uncovered areas.
+
+NOTE:Set Jenkins to fail builds if coverage is below 80%
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+discard old builds
+===================
+
+create an another job with same configuration of other job
+========================================================== 
