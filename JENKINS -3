@@ -1,0 +1,238 @@
+discard old builds
+===================
+
+create an another job with same configuration of other job
+==========================================================
+
+
+
+Jenkins server stop and start issue
+====================================
+
+old: 52.66.196.163
+
+new: 65.2.171.155
+
+
+/var/lib/jenkins/jenkins.model.jenconf.xml   ---> update new ip here and restart jenkins
+
+
+NOTE: remove tomcat,SonarQube and nexus --> explain this
+
+Why Do We Need to Enable and Disable Jobs in Jenkins (Freestyle Jobs)?
+
+=============================================================================
+
+
+In Jenkins Freestyle Jobs, enabling and disabling jobs is useful for managing workflows, troubleshooting issues, and optimizing performance. Here’s a structured explanation you can use for your students:
+
+
+ 1. What Happens When You Disable a Job in Jenkins?
+ -----------------------------------------------------
+
+- Disabling a job prevents it from executing even if it is triggered by:
+  - A manual build request  
+  - A scheduled cron trigger  
+  - A webhook (e.g., GitHub, GitLab, Bitbucket)  
+  - Another pipeline or upstream job  
+
+- The job's configuration remains intact, but it won’t run until re-enabled.
+
+
+ 2. Why Would You Disable a Freestyle Job?
+ -------------------------------------------
+
+ 🔹 Maintenance Mode (Updating Configurations)
+
+- If you are making changes to a job’s script, repository, or settings, disabling it prevents accidental runs.
+- Example: If you are updating a deployment job and don’t want it to trigger mid-update, disable it first.
+
+ 🔹 Debugging & Troubleshooting
+
+- If a job is failing continuously due to a configuration issue, disabling it helps you investigate without generating unnecessary failures.
+- Example: If a build is failing due to a missing dependency, disable it until the issue is resolved.
+
+ 🔹 Preventing Accidental Builds
+
+- Sometimes, a job should not run temporarily but should not be deleted either.
+- Example: If a project is paused for client review, disable the job to prevent unnecessary builds.
+
+ 🔹 Reducing Server Load
+
+- Running too many jobs at once can overload the Jenkins server. Disabling unused or less critical jobs helps optimize performance.
+- Example: If a large-scale deployment is in progress, you might disable non-essential jobs to free up system resources.
+
+
+ 3. Why Would You Enable a Job Again?
+ -------------------------------------
+
+ 🔹 Ready for Execution After Fixing Issues
+- If a job was disabled due to bugs, errors, or missing dependencies, re-enable it after fixing the problem.
+
+ 🔹 Restarting a Paused Project
+
+- If development resumes on a paused project, you enable the job to resume automated builds.
+
+ 🔹 Re-Enabling After Jenkins Restart
+
+- Some jobs may get disabled due to system failures or updates. Enabling them ensures they function normally again.
+
+
+ 4. How to Enable or Disable a Freestyle Job in Jenkins?
+ --------------------------------------------------------
+
+ 🔸 Using the UI
+1. Go to Jenkins Dashboard
+2. Click on the Job Name
+3. On the left panel:
+   - Click "Disable Project" (to disable)
+   - Click "Enable" (to enable again)
+
+
+ 5. Real-World Example for Students
+ ------------------------------------
+
+Scenario: CI/CD Pipeline with Deployment Job
+- A Freestyle Job is set to deploy the application to a test server.
+- Developers need to make major changes to the test environment.
+- Instead of deleting the job, they disable it to prevent unwanted deployments.
+- Once the environment is ready, they enable the job again.
+
+
+ 6. Best Practices for Managing Enabled/Disabled Jobs
+ -----------------------------------------------------
+
+✅ Label Disabled Jobs Clearly → Add descriptions explaining why a job is disabled.  
+✅ Monitor Disabled Jobs → Remove old jobs if they are permanently disabled.  
+✅ Use Folders for Organization → Keep active and inactive jobs organized.  
+✅ Avoid Disabling Critical Jobs Without Notice → Inform team members before disabling jobs that impact deployments.  
+
+
+
+
+Plugins in jenkins server
+=========================
+
+Deploy to container*
+===================
+
+--> Deploy the our application into the tomcat server 
+
+
+maven integration
+==================
+
+if you want to create a maven project type then use this plugin.
+
+
+safeRestart
+===========
+
+systemctl restart jenkins ---> It is in linux server, But we dont have permission to access it , Then how to restart it.
+
+
+restart --->http://65.0.199.60:8080/restart
+
+safeRestart -->http://65.0.199.60:8080/safeRestart
+
+IQ] what is the difference between restart and safeRestart ?
+
+restart: It will stop the running jobs and then restarted
+
+safeRestart: It will wait for complition of all the jobs and restarted
+
+
+NOTE: for safeRestart we have plugin called as a safeRestart, Install and try it
+
+
+
+
+next Build Number
+=================
+
+--> After insatlling this plugin we can give our own build number, The next number must be greater than the previous build number only.
+
+NOTE: in linux server /var/lib/jenkins/jobs/jio-dev/jobs/nextBuildNumber file is available , But some time times we dont have an access to linux server to use this
+
+
+
+JaCoCo
+======
+
+By using this plugin we can stop the deployment through code coverage percentage.
+
+
+ssh agent 
+=========
+we will discuss in the pipeline project
+
+Audit Trail ***
+===========
+
+I will help us to track the jenkins activity like create,delete jobs, etc
+
+--> install the plugin
+
+--> dashboard --> manage jenkins --> system --> audit trail --> add logger --> log file --> log rotation: /var/lib/jnkins/audit-trail.log
+    size in MB: 20
+    Log file count: 20
+
+
+
+audit-trail.log.0
+
+audit-trail.log.1
+
+audit-trail.log.2
+
+audit-trail.log.3
+
+tail -f audit-trail.log.0  --> go and trigger the build
+
+
+
+
+
+Blue ocean plugin
+=================
+
+
+Build name Description setter
+=============================
+
+step 1: Install plug-in
+
+step 2 : Dash board --> job --> configuration --> Build Environment --> select Set Build Name --> jio-dev-#${BUILD_NUMBER}
+
+
+Thin backup 
+===========
+will discuss in jenkins backup
+
+Role based authentication
+=========================
+will discuss in jenkins security
+
+
+=====================================================================================
+
+Build with parameters
+======================
+
+Dashboard --> job --> configuration --> General --> select This Project is parametirized --> add parameter --> choice parameter -->
+
+   names: BranchNames
+   Choices: main 
+            dev
+            qa
+--> save 
+
+
+NOTE: under the source code section pass the names 
+    
+      */${BranchNames}
+
+
+
+How to create a view?
+=====================
