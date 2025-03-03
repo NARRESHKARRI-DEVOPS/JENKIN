@@ -195,7 +195,7 @@ tail -f audit-trail.log.0  --> go and trigger the build
 
 Blue ocean plugin
 =================
-
+The Blue Ocean plugin for Jenkins gives a simple, modern view of your pipelines. It makes it easy to create, edit, and track builds with a visual interface instead of complex code. 😊
 
 Build name Description setter
 =============================
