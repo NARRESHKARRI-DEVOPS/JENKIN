@@ -1,0 +1,190 @@
+Freestyle job
+Maven job
+
+NOTE: we can not customize the job using maven and free style[ EX: order of exexution]
+
+Create the pipeline project job
+===============================
+
+--> Pipeline scripts can be written in the groovy script.
+
+--> we can write in two ways
+   1. scripted way
+   2. declarative way
+
+
+NOTE: pls install stageview plug-in
+
+1. scripted way
+===============
+
+syntax:
+=======
+
+node //by default  built-in(master) node
+{
+
+//write code here.
+
+}
+
+step 1: create a pipeline job
+
+goto new item --> Enter an item name(demo-scripted-pipeline) --> pipeline --> ok
+
+step 2: get the code from github repository
+
+select pipeline-job--> configure --> scrool down to pipeline area --> click on pipeline syntax --> sample step --> git: Git
+
+   Repo url: 
+   branch:
+   credentials:
+   
+--> generate pipeline script
+
+
+
+node
+{
+   stage('checkout')
+   {
+   git branch: 'development', credentialsId: 'e5b73679-3105-4429-a5b4-b303fd9e35a0', url: 'https://github.com/kkeducation12345/maven-web-app-project-kk-funda.git'
+   }
+}
+
+
+step 3: 
+
+node
+{
+   def mavenHome=tool name: "maven 3.9.8"
+   stage('checkout')
+   {
+   git branch: 'development', credentialsId: 'e5b73679-3105-4429-a5b4-b303fd9e35a0', url: 'https://github.com/kkeducation12345/maven-web-app-project-kk-funda.git'
+   }
+   stage('build')
+   {
+  sh "${mavenHome}/bin/mvn clean package"
+   }
+  
+}
+
+
+step 4: execute the sonarqube report
+
+node
+{
+   def mavenHome=tool name: "maven 3.9.8"
+   stage('checkout')
+   {
+   git branch: 'development', credentialsId: 'e5b73679-3105-4429-a5b4-b303fd9e35a0', url: 'https://github.com/kkeducation12345/maven-web-app-project-kk-funda.git'
+   }
+   stage('build')
+   {
+  sh "${mavenHome}/bin/mvn clean package"
+   }
+  stage('SonarQubeReport')
+   {
+  sh "${mavenHome}/bin/mvn clean package sonar:sonar"
+   }
+  
+}
+
+
+step 5:  upload artifact into nexus
+
+node
+{
+   def mavenHome=tool name: "maven 3.9.8"
+   stage('checkout')
+   {
+   git branch: 'development', credentialsId: 'e5b73679-3105-4429-a5b4-b303fd9e35a0', url: 'https://github.com/kkeducation12345/maven-web-app-project-kk-funda.git'
+   }
+   stage('build')
+   {
+  sh "${mavenHome}/bin/mvn clean package"
+   }
+  stage('SonarQubeReport')
+   {
+  sh "${mavenHome}/bin/mvn clean package sonar:sonar"
+   }
+
+ stage('Uploadarifacttonexus')
+   {
+  sh "${mavenHome}/bin/mvn clean package sonar:sonar deploy"
+   }
+  
+}
+
+
+
+step 6: deploy application into tomcat server
+
+--> Deploy the application through admin console
+--> copy paste the war file into the webapps directory
+
+--> But Jenkins is in different server and tomcat is in different server.
+
+NOTE: now you need to copy file from jenkins server to tomcat server with the help of SCP command , But we need tomcat credentials to pass.
+
+--> Jenkins unable to enter the credentials, So we need to generate the one "SSH token"
+
+--> insatall the "ssh agent" plugin 
+
+--> select the pipeline job --> pipeline syntax --> snippet generator --> [refresh that page] --> sample step  --> sshagent :SSH Agent
+
+--> copy the penfile of tomcat server --> add --> jenkins --> username with private key --> 
+
+description: tomcat credentials
+user-name: ec2-user
+private key --> enter directly --> add --> paste pem --> add --> generate pipeline script --> add in the stage.
+
+
+node
+{
+   def mavenHome=tool name: "maven 3.9.8"
+   stage('checkout')
+   {
+   git branch: 'development', credentialsId: 'e5b73679-3105-4429-a5b4-b303fd9e35a0', url: 'https://github.com/kkeducation12345/maven-web-app-project-kk-funda.git'
+   }
+   stage('build')
+   {
+  sh "${mavenHome}/bin/mvn clean package"
+   }
+  stage('SonarQubeReport')
+   {
+  sh "${mavenHome}/bin/mvn clean package sonar:sonar"
+   }
+
+ stage('Uploadarifacttonexus')
+   {
+  sh "${mavenHome}/bin/mvn clean package sonar:sonar deploy"
+   }
+
+   stage('deployapptotomcat')
+   {
+     sshagent(['ff0ba357-7dea-4d4c-bf8f-daffd5c1b173']) 
+    {
+    
+     sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@13.201.194.103/:/opt/apache-tomcat-9.0.91/webapps/"
+
+
+     }
+
+     sshagent(['29ffdf5c-84b7-4a5a-aade-e5ca6dd35b6f']) {
+    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@13.201.194.103:/opt/apache-tomcat-9.0.91/webapps/"
+}
+   }
+  
+}
+
+
+--> After building you will get an error; permission denied [for ec2-user no permission on webapps directory] , Now give the full permissions to webapps directory.
+
+chmod -R 777 webapps
+
+--> again build it will be sucess.
+
+
+
+================================================================================================
