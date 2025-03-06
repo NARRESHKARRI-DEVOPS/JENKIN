@@ -160,7 +160,22 @@ node
    {
   sh "${mavenHome}/bin/mvn clean package sonar:sonar deploy"
    }
+   stage('deploy to container')
+   {
+   echo "deploying war file using curl"
+   sh """
+   curl -u admin:hello \
+   --upload-file /var/lib/jenkins/workshop/jio-scripted-way-pipeline-development/target/
+   maven-web-application.war \
+   "http://3.108.194.157:8080/manager/text/deploy?path=/maven-web-application&update=true"
+   """
+   }
 
+}
+
+
+
+//////////////////// jenkins ssh agebt plugin was not working so  curl command using*****
    stage('deployapptotomcat')
    {
      sshagent(['ff0ba357-7dea-4d4c-bf8f-daffd5c1b173']) 
