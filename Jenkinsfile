@@ -8,6 +8,7 @@ node {
 
 	
 	stage('git clone'){
+	notifyBuild('STARTED')
 	git branch: 'staging', credentialsId: '4fed7abf-d02c-4ae8-92c2-1f56430fb590', url: 'https://github.com/NARRESHKARRI-DEVOPS/MAVEN--WAR-FILE.git'
 	}
 	stage('maven'){
