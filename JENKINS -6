@@ -1,0 +1,266 @@
+How to configure poll SCM?
+==========================
+
+jenkins --> select pipeline job --> pipeline syntax --> snippet generator --> properties: Set job properties --> select discard old builds
+
+           --> poll scm
+               * * * * *
+---> generate script --> copy --> paste at node level
+
+
+
+//This is scripted pipeline sample
+node
+{
+
+  properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '5', artifactNumToKeepStr: '5', daysToKeepStr: '5', numToKeepStr: '5')), pipelineTriggers([pollSCM('* * * * * ')])])
+  //   /var/lib/jenkins/tools/hudson.tasks.Maven_MavenInstallation/maven-3.9.9/bin
+
+   def mavenHome=tool name:  "maven-3.9.9"
+  stage('git checkout')
+  {
+  git branch: 'development', credentialsId: 'd8f5bb40-ee7a-41f2-a72d-0fcc8eb6b07b', url: 'https://github.com/kkeducation12345/maven-web-app-project-kk-funda.git'
+  }
+  stage('Build')
+  {
+     sh "${mavenHome}/bin/mvn clean package"
+  }
+  stage('SQ Report')
+  {  
+     sh "${mavenHome}/bin/mvn clean sonar:sonar"   
+  }
+
+  stage('upload artifactt')
+  {
+    sh "${mavenHome}/bin/mvn clean deploy"
+  }
+
+    stage('Deploy to Tomcat') {
+        echo "Deploying WAR file using curl..."
+
+        sh """
+            curl -u kkfunda:kkfunda \
+            --upload-file /var/lib/jenkins/workspace/jio-scripted-way-pipeline-develoment/target/maven-web-application.war \
+            "http://3.108.194.157:8080/manager/text/deploy?path=/maven-web-application&update=true"
+        """
+    }
+
+
+}    
+}
+
+
+
+
+
+
+Global variable reference
+==========================
+
+jenkins --> select pipeline job --> pipeline syntax--> global variable reference --> click here
+
+node
+{
+   echo "git job name: ${env.JOB_NAME}"
+   echo "build number is: ${env.BUILD_NUMBER}"
+   echo "node name is: ${env.NODE_NAME}"
+}
+
+
+
+NOTE: In real time jenkins script is placed in the github 
+
+
+--> copy file --> add file in git hub[Jenkinsfile] --> paste --> goto jenkins job --> pipeline Definition --> select pipeline Script from SCM.
+
+
+IQ] Is it possible to give the custom name of jenkins file?
+
+ANS: yes
+
+--> edit file name in github --> and trigger the build --> error: unable to find the jenkins file
+
+
+-->select job --> configure --> change the script path with latest name --> save.
+
+
+--> Then trigger the build.
+
+
+
+
+
+slack notifications
+===================
+
+node {
+
+   echo "git branch name: ${env.JOB_NAME}"
+   echo "build number is: ${env.BUILD_NUMBER}"
+   echo "node name is: ${env.NODE_NAME}"
+    
+    def mavenHome=tool name: "maven3.9.9"
+
+    try {
+
+	stage('git checkout')
+	{
+      git branch: 'development', credentialsId: '8d341570-e046-4d2c-8060-33c3d5d493f7', url: 'https://github.com/gangavaramdevops/maven-web-app-project-kk-funda.git'
+	}
+	stage('compile')
+	{
+    sh  "${mavenHome}/bin/mvn compile"
+	}
+	stage('Build')
+	{
+    sh  "${mavenHome}/bin/mvn clean package"
+	}
+   stage('SQ Report')
+	{
+    sh  "${mavenHome}/bin/mvn sonar:sonar"
+	}
+	stage('Deploy into Nexus')
+	{
+    sh  "${mavenHome}/bin/mvn clean deploy"
+	}
+	stage('Deploy to Tomcat') {
+        echo "Deploying WAR file using curl..."
+
+        sh """
+            curl -u kkfunda:kkfunda \
+            --upload-file /var/lib/jenkins/workspace/jio-scripted-way-pipeline-develoment/target/maven-web-application.war \
+            "http://3.108.194.157:8080/manager/text/deploy?path=/maven-web-application&update=true"
+        """
+    }
+
+  } catch (e) {
+    // If there was an exception thrown, the build failed
+    currentBuild.result = "FAILED"
+    throw e
+  } finally {
+    // Success or failure, always send notifications
+    notifyBuild(currentBuild.result)
+  }
+}
+
+def notifyBuild(String buildStatus = 'STARTED') {
+  // build status of null means successful
+  buildStatus =  buildStatus ?: 'SUCCESS'
+
+  // Default values
+  def colorName = 'RED'
+  def colorCode = '#FF0000'
+  def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
+  def summary = "${subject} (${env.BUILD_URL})"
+
+  // Override default values based on build status
+  if (buildStatus == 'STARTED') {
+    color = 'YELLOW'
+    colorCode = '#FFFF00'
+  } else if (buildStatus == 'SUCCESS') {
+    color = 'GREEN'
+    colorCode = '#00FF00'
+  } else {
+    color = 'RED'
+    colorCode = '#FF0000'
+  }
+
+  // Send notifications
+  slackSend (color: colorCode, message: summary)
+}
+
+
+
+
+
+
+
+
+NOTE: To display the Build started message, pls call notifyBuild('STARTED') before checkout stage.
+
+
+
+Declarative pipelines
+======================
+
+
+pipeline {
+    agent any 
+tools
+{
+  maven "maven3.9.9"
+}
+
+    stages {
+        stage('checkout stage') { 
+            steps {
+           git branch: 'development', credentialsId: '8d341570-e046-4d2c-8060-33c3d5d493f7', url: 'https://github.com/gangavaramdevops/maven-web-app-project-kk-funda.git'
+            }
+        }
+            stage('Build') { 
+            steps {
+         sh "mvn clean package"
+                
+            }
+          }
+          stage('SQREPORT'){
+            steps{
+          sh "mvn sonar:sonar"
+          }
+        }
+         stage('DeployTONexus'){
+           steps{
+          sh "mvn deploy"
+          }
+        }
+        stage('DeployAppToTomcat'){
+           steps{
+
+		echo "Deploying WAR file using curl..."
+
+        sh """
+            curl -u kkfunda:kkfunda \
+            --upload-file /var/lib/jenkins/workspace/jio-scripted-way-pipeline-develoment/target/maven-web-application.war \
+            "http://3.108.194.157:8080/manager/text/deploy?path=/maven-web-application&update=true"
+        """
+         
+          }
+        }
+    } //stages closing
+
+post {
+  success {
+    notifyBuild(currentBuild.result)
+  }
+  failure {
+notifyBuild(currentBuild.result)
+      }
+}
+}//pipeline closing
+
+
+def notifyBuild(String buildStatus = 'STARTED') {
+  // build status of null means successful
+  buildStatus =  buildStatus ?: 'SUCCESS'
+
+  // Default values
+  def colorName = 'RED'
+  def colorCode = '#FF0000'
+  def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
+  def summary = "${subject} (${env.BUILD_URL})"
+
+  // Override default values based on build status
+  if (buildStatus == 'STARTED') {
+    color = 'YELLOW'
+    colorCode = '#FFFF00'
+  } else if (buildStatus == 'SUCCESS') {
+    color = 'GREEN'
+    colorCode = '#00FF00'
+  } else {
+    color = 'RED'
+    colorCode = '#FF0000'
+  }
+
+  // Send notifications
+  slackSend (color: colorCode, message: summary, channel: '#airtel-dev')
+}
