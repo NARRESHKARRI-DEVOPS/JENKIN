@@ -203,3 +203,9 @@ chmod -R 777 webapps
 
 
 ================================================================================================
+/////////////////////
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ssh agent 
+
+first we need go manage jenkins ,credientals
+selet globalcredital username private paste it  add, pem file open nd paste on the fileder
+
