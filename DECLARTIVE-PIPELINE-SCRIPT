@@ -6,7 +6,8 @@ tools
 }
 
     stages {
-        stage('checkout stage') { 
+        stage('checkout stage') {
+  notifyBuild('STARTED')
             steps {
            git branch: 'development', credentialsId: '8d341570-e046-4d2c-8060-33c3d5d493f7', url: 'https://github.com/gangavaramdevops/maven-web-app-project-kk-funda.git'
             }
