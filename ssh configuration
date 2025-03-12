@@ -1,0 +1,44 @@
+node {
+    def mavenHome = tool name: "maven3.9.9"
+    
+    timestamps {
+        stage('git checkout') {
+            git branch: 'development', credentialsId: '0a3e74a5-67bb-43cf-833d-608d0f69b402', url: 'https://github.com/venu101502-gopal/maven-web-app-project-kk-funda.git'
+        }
+
+        stage('compile') {
+            sh "${mavenHome}/bin/mvn clean compile"
+        }
+
+        stage('Build') {
+            sh "${mavenHome}/bin/mvn clean package"
+        }
+
+        stage('SonarQube') {
+            sh "${mavenHome}/bin/mvn sonar:sonar"
+        }
+
+        stage('Nexus') {
+            sh "${mavenHome}/bin/mvn clean deploy"
+        }
+        
+        stage('Deploy to Tomcat') {
+            sshagent(['Deploye-user']) {
+                // Stop Tomcat service gracefully
+                sh """
+                    ssh -o StrictHostKeyChecking=no ec2-user@13.201.92.221 'sudo /opt/tomcat/bin/shutdown.sh'
+                """
+                
+                // Deploy WAR file to Tomcat
+                sh """
+                    scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@13.201.92.221:/opt/tomcat/webapps/
+                """
+                
+                // Start Tomcat service
+                sh """
+                    ssh -o StrictHostKeyChecking=no ec2-user@13.201.92.221 'sudo /opt/tomcat/bin/startup.sh'
+                """
+            }
+        }
+   }
+}
