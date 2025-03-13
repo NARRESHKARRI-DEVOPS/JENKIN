@@ -33,6 +33,9 @@ Jenkins stores all its critical data inside the **JENKINS_HOME** directory. You 
 4. **Optional:** Compress the backup for storage efficiency.
    ```bash
    tar -czvf /backup/jenkins_backup_$(date +%F).tar.gz /backup/jenkins_backup_$(date +%F)
+
+   tar -czvf /backup/jenkins_backup_$(date +%F).tar.gz /var/lib/jenkins
+
    ```
 
 ### Method 2: Using Jenkins ThinBackup Plugin
@@ -65,7 +68,7 @@ You can create a Jenkins job to schedule backups.
    BACKUP_DIR="/backup/jenkins_auto_backup_$(date +%F)"
    sudo mkdir -p $BACKUP_DIR
    sudo cp -r /var/lib/jenkins/* $BACKUP_DIR
-   sudo tar -czvf $BACKUP_DIR.tar.gz $BACKUP_DIR
+   sudo tar -czf $BACKUP_DIR.tar.gz $BACKUP_DIR
    sudo rm -rf $BACKUP_DIR
    ```
 4. **Schedule it** under **Build Triggers** using **Cron syntax**, e.g., `H 2 * * *` (runs at 2 AM daily).
@@ -106,3 +109,18 @@ You can create a Jenkins job to schedule backups.
 - **Store backups remotely** (AWS S3, Google Drive, etc.).
 - **Test restores** regularly to ensure backups are working.
 - **Exclude logs and unnecessary files** to reduce backup size.
+
+
+
+backup_dir="/backup_auto_$(date +%F)"
+sudo mkdir -p "$backup_dir"            # Create the backup directory
+sudo cp -r /var/lib/jenkins/* "$backup_dir"    # Copy all Jenkins files to the backup directory
+sudo tar -czf "$backup_dir.tar.gz" -C / "$(basename "$backup_dir")"  # Create a compressed tarball of the backup directory
+sudo rm -rf "$backup_dir"              # Remove the backup directory after archiving
+
+//////////////////////////// correct scripy/////
+backup_dir="/backup_auto_$(date +%F)"
+sudo mkdir -p "$backup_dir"
+sudo cp -r /var/lib/jenkins/* "$backup_dir"
+sudo tar -zcf $backup_dir.tar.gz /"$backup_dir"
+sudo rm -rf "$backup_dir"
