@@ -1,0 +1,143 @@
+
+UPSTREAM JOB & DOWNSTREAM JOB:
+==============================
+
+
+
+- **Upstream Job**: This is a job that triggers another job. For example, if Job A completes successfully and then triggers Job B, Job A is the upstream job.
+
+- **Downstream Job**: This is the job that gets triggered by another job. In the same example, Job B is the downstream job.
+
+These jobs are used to create a sequence of tasks, ensuring that one task starts only after the previous one finishes. This helps in automating workflows, like building, testing, and deploying software.
+
+
+
+
+///////// parallel job - script/////////////
+
+pipeline {
+    agent any 
+tools
+{
+  maven "maven 3.9.8"
+}
+
+    stages {
+        stage('checkout stage') { 
+            steps {
+              git branch: 'development', credentialsId: 'c13d2b4c-1f45-454d-96b4-0f4dae4cc207', url: 'https://github.com/kkeducation12345/maven-web-app-project-kk-funda.git'
+                
+            }
+        }
+   stage('Build and SQR')
+   {
+     steps
+     {
+        parallel(
+      "Build" : {
+           sh "mvn clean package"
+       },
+      "Sonar" : {
+           sh "mvn sonar:sonar"
+       }
+        )
+       
+     }
+   }             
+    } //stages closing
+}//pipeline closing
+
+
+/////////////////parallel job ////
+
+
+Parallel job execution in Jenkins allows you to run multiple tasks simultaneously, which can significantly reduce build times and improve efficiency. Here's a simplified overview to help you understand:
+
+Why Use Parallel Execution?
+
+Speeds up workflows by running tasks concurrently.
+
+Utilizes resources more effectively.
+
+Ideal for tasks like testing across multiple environments or platform
+
+
+
+Declarative Pipeline: Use the parallel directive in your Jenkinsfile. For example:
+----------------------------------------------------------------------------------
+
+groovy
+pipeline {
+    agent any
+    stages {
+        stage('Parallel Execution') {
+            parallel (
+                stage('Task 1') {
+                    steps {
+                        echo 'Running Task 1'
+                    }
+                }
+                stage('Task 2') {
+                    steps {
+                        echo 'Running Task 2'
+                    }
+                }
+            )
+        }
+    }
+}
+Plugins: Install plugins like the "Parameterized Trigger Plugin" for more advanced parallelization options.
+
+Best Practices 
+===============
+
+Ensure tasks are independent to avoid conflicts.
+
+Monitor resource usage to prevent overloading your Jenkins server.
+
+
+
+////// JENLINS SHARED LIBARARIES/////
+
+Jenkins Shared Libraries are a powerful way to reuse and modularize your pipeline code, making it easier to maintain and follow the "Don't Repeat Yourself" (DRY) principle. Here's a simplified explanation:
+
+What Are Shared Libraries?
+Definition: A Shared Library is a collection of reusable Groovy scripts stored in a version control system (like Git). These scripts can be used across multiple Jenkins pipelines.
+
+Purpose: They help avoid duplicating code in pipelines, making workflows consistent and easier to maintain.
+
+How to Set Up a Shared Library
+Create a Repository:
+
+Organize your library with the following structure:
+
+(root)
+├── vars/          # Global variables (e.g., reusable pipeline steps)
+│   ├── example.groovy
+├── src/           # Groovy classes for advanced logic
+│   ├── org/
+│       ├── mylib/
+│           ├── Helper.groovy
+├── resources/     # Static files (e.g., JSON, YAML)
+Add to Jenkins:
+
+Go to Manage Jenkins > Configure System > Global Pipeline Libraries.
+
+Add your library by specifying its name, source code repository, and default version.
+
+Use in Pipelines:
+
+Import the library in your Jenkinsfile:
+
+groovy
+@Library('your-library-name') _
+exampleFunction() // Call a function from the library
+Benefits of Shared Libraries
+Code Reusability: Write once, use in multiple pipelines.
+
+Consistency: Standardize workflows across projects.
+
+Ease of Maintenance: Update code in one place, and it reflects in all pipelines.
+
+
+
