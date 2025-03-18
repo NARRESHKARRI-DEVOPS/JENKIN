@@ -1,0 +1,63 @@
+@Library('slack') _
+
+pipeline {
+    agent any 
+    tools {
+        maven "maven" // Ensure "maven" matches your Maven tool name configured in Jenkins
+    }
+
+    stages {
+        stage('Checkout Stage') { 
+            steps {
+                git branch: 'prod', 
+                    credentialsId: '4fed7abf-d02c-4ae8-92c2-1f56430fb590', 
+                    url: 'https://github.com/NARRESHKARRI-DEVOPS/MAVEN--WAR-FILE.git'
+            }
+        }
+        
+        stage('Build') { 
+            steps {
+                sh "mvn clean package"
+            }
+        }
+        
+        stage('SQREPORT') {
+            steps {
+                sh "mvn sonar:sonar"
+            }
+        }
+        
+        stage('Deploy to Nexus') {
+            steps {
+                sh "mvn deploy"
+            }
+        }
+        
+        stage('Deploy to EC2') {
+            steps {
+                sshagent(['ssh-key']) {
+                    // Shutdown Tomcat
+                    sh "ssh -o StrictHostKeyChecking=no ec2-user@13.235.16.74 'sudo /opt/tomcat/bin/shutdown.sh'"
+                    // Copy the WAR file to EC2
+                    sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@13.235.16.74:/opt/tomcat/webapps/"
+                    // Start Tomcat
+                    sh "ssh -o StrictHostKeyChecking=no ec2-user@13.235.16.74 'sudo /opt/tomcat/bin/startup.sh'"
+                }
+            }
+        }
+    }
+
+   post {
+    success {
+        script {
+            sendSlackNotifications(currentBuild.result)
+        }
+    }
+    failure {
+        script {
+            sendSlackNotifications(currentBuild.result)
+        }
+    }
+}
+
+}
